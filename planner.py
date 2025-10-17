@@ -125,11 +125,9 @@ sac_to_openngc_type = {
 #|OBJECT|OTHER|TYPE|CON|RA|DEC|MAG|SUBR|U2K|TI|SIZE_MAX|SIZE_MIN|PA|CLASS|NSTS|BRSTR|BCHM|NGC DESCR|NOTES|
 # PK131+2.1|Abell3|PLNNB|CAS|0212.2|+6409|18.2|16|17|1|60s|||3b||18.8||||
 def parse_sac():
-    with open("SAC_DeepSky_Ver81_Fence.TXT", newline="") as f:
-        fields = [c.strip() for c in f.readline().split("|") if c.strip()]
-        fields.insert(0, "leading")
-        fields.append("trailing")
-        r = csv.DictReader(f, delimiter="|", fieldnames=fields)
+    with open("SAC_DeepSky_Ver81_QCQ.TXT", newline="") as f:
+        fields = [c.replace("\"", "").strip() for c in f.readline().split(",") if c.strip()]
+        r = csv.DictReader(f, delimiter=",", fieldnames=fields)
         next(r)
         for row in r:
             row["Name"] = row["OBJECT"].replace(" ", "")
@@ -143,6 +141,11 @@ def parse_sac():
                 cat = codes.pop(name)
                 row["Index"] = name
                 row["Name"] = cat
+            else:
+                # sometimes Other is much nicer
+                other = row["OTHER"].strip()
+                if other.startswith("Abell") and name.startswith("PK"):
+                    row["Name"] = other
 
             row["V-Mag"] = float(row["MAG"].strip())
 
@@ -263,9 +266,9 @@ def dedupe(lst):
     return deduped
 
 print('<style>')
-print('html { font-size: 50%; }')
+print('h1 { font-size: 75%; }')
 print('.no_break { break-inside: avoid; }')
-print('table { border-collapse: collapse; width: 100%; text-align: left; border: 0; }')
+print('table { border-collapse: collapse; width: 100%; text-align: left; border: 0; font-size: 75%; }')
 print('th, td { border: 0; white-space: nowrap; }')
 print('thead th { border-bottom: 2px solid #000; }')
 print('table tr:nth-child(even) { background-color: #f0f0f0; }')
@@ -370,7 +373,13 @@ for page in range(1, 81):
         elif b:
             size = render_size(b)
 
-        notes = (e.get("Common names") or e.get("Index") or "-").split(",")[0][:20]
+        notes = e.get("Index") or ""
+        if e.get("Common names"):
+            if notes:
+                notes = notes + ";"
+            notes += e.get("Common names").split(",")[0][:20]
+        if not notes:
+            notes = "-"
 
         print(f"<tr><td>{name}</td><td>{ra}</td><td>{dec}</td><td>{typ}</td><td>{mag}</td><td>{size}</td><td>{bright}</td><td>{notes}</tr>")
 
