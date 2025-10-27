@@ -139,6 +139,10 @@ def parse_sac():
                 continue
 
             name = row["Name"]
+            if name in {"NGC651"}:
+                # not flagged as dup
+                continue
+
             row["Name"] = re.sub("NGC", "", name)
             if name in codes:
                 cat = codes.pop(name)
