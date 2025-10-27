@@ -46,10 +46,12 @@ my_limit = -20
 #
 # Code,Alias,Name
 codes = {}
+pops = {}
 with open("names.csv", newline="") as f:
     r = csv.DictReader(f)
     for row in r:
         codes[row["Alias"]] = row["Code"]
+        pops[row["Alias"]] = row["Name"]
 
 ngc = []
 
@@ -72,6 +74,7 @@ def parse_openngc():
                 # print(f"found {name} as {cat}")
                 row["Index"] = name
                 row["Name"] = cat
+                row["Popular"] = pops[name]
 
             ra = row.get("RA")
             h, m, s = [float(x) for x in ra.split(":")]
@@ -141,6 +144,7 @@ def parse_sac():
                 cat = codes.pop(name)
                 row["Index"] = name
                 row["Name"] = cat
+                row["Popular"] = pops[name]
             else:
                 # sometimes Other is much nicer
                 other = row["OTHER"].strip()
@@ -266,9 +270,10 @@ def dedupe(lst):
     return deduped
 
 print('<style>')
-print('h1 { font-size: 75%; }')
+print('@page { margin-left: 5cm; }')
+print('h1 { font-size: 60%; }')
 print('.no_break { break-inside: avoid; }')
-print('table { border-collapse: collapse; width: 100%; text-align: left; border: 0; font-size: 75%; }')
+print('table { border-collapse: collapse; width: 100%; text-align: left; border: 0; font-size: 60%; }')
 print('th, td { border: 0; white-space: nowrap; }')
 print('thead th { border-bottom: 2px solid #000; }')
 print('table tr:nth-child(even) { background-color: #f0f0f0; }')
@@ -340,7 +345,7 @@ for page in range(1, 81):
         print('\n\n<div style="page-break-after: always;"></div>\n')
 
     print('<div class="no_break">')
-    print(f"<h1>Page {page} ({ra}<sup>h</sup>...{ra+3}<sup>h</sup> / {dec-30}°...{dec}°)</h1>")
+    print(f"<h1>Chart {page} ({ra}<sup>h</sup>...{ra+3}<sup>h</sup> / {dec-30}°...{dec}°)</h1>")
     print('<table><thead>')
     print('<tr><th>Name</th><th>RA</th><th>Dec</th><th>Type</th><th>Mag</th><th>Size</th><th>Bright</th><th>Notes</th></tr>')
     print('</thead><tbody>')
@@ -374,10 +379,17 @@ for page in range(1, 81):
             size = render_size(b)
 
         notes = e.get("Index") or ""
-        if e.get("Common names"):
-            if notes:
-                notes = notes + ";"
-            notes += e.get("Common names").split(",")[0][:20]
+
+        if (common := e.get("Popular")):
+            notes += "; " if notes else ""
+            notes += common
+        elif (common := e.get("Common names")):
+            # these are usually lower quality notes
+            notes += "; " if notes else ""
+            notes += common
+
+        notes = notes[:30]
+
         if not notes:
             notes = "-"
 
