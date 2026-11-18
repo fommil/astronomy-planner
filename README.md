@@ -1,0 +1,1 @@
+A helpful tool for generating [a PDF file](./plan.pdf) tailored to your visual observing site (i.e. latitude and viewing conditions) and fully compatible with the Pocket Sky Atlas. I print mine out and keep it in a plastic cover to protect it from the elements, I pick the the RA hour that matches my most comfortable viewing angle.
